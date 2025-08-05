@@ -1,0 +1,12 @@
+# Alternative requirements for easier deployment
+Flask==2.3.3
+gunicorn==21.2.0
+Werkzeug==2.3.7
+numpy==1.24.3
+pandas==2.0.3
+
+# Try face recognition without dlib first
+opencv-python-headless==4.8.1.78
+
+# If face-recognition fails, we'll use a simpler approach
+# face-recognition==1.3.0

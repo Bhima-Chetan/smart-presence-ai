@@ -1,12 +1,26 @@
+[providers]
+python = "3.10"
+
+[build]
+# Install system dependencies needed for face recognition
+apt = [
+    "build-essential",
+    "cmake", 
+    "libopenblas-dev",
+    "liblapack-dev",
+    "libdlib-dev"
+]
+
 [phases.build]
 cmds = [
     "pip install --upgrade pip",
-    "pip install -r requirements.txt"
+    "pip install wheel setuptools",
+    "pip install --no-cache-dir -r requirements.txt"
 ]
 
 [phases.start]
-cmd = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120"
+cmd = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload"
 
 [variables]
 PYTHONUNBUFFERED = "1"
-PORT = "8080"
+PYTHONDONTWRITEBYTECODE = "1"

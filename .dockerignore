@@ -1,0 +1,46 @@
+# Git and version control
+.git
+.gitignore
+README.md
+LICENSE
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache
+
+# Virtual environments
+env
+venv
+.env
+.venv
+
+# Local development files
+smart_presence.db
+*.log
+app_debug.log
+face_model.pkl
+
+# Training data (too large and contains personal photos)
+training_data/
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local uploads
+uploads/
+static/exports/
+
+# Development configs
+.env.local
+.env.development
