@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Live Recognition - Smart Presence{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-camera"></i> Live Recognition</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('attendance') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-clipboard-list"></i> Attendance
+            </a>
+            <a href="{{ url_for('debug_face_model') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-bug"></i> Debug Model
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Status indicators row -->
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="alert alert-info" id="camera-status">
+            <i class="fas fa-circle-notch fa-spin"></i> Connecting to camera...
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="alert alert-secondary" id="detection-status">
+            <i class="fas fa-search"></i> Waiting for faces...
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="alert alert-secondary" id="attendance-status">
+            <i class="fas fa-clipboard-check"></i> Attendance: Ready
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-video"></i> Camera Feed</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="video-container position-relative">
+                    <img src="{{ url_for('video_feed') }}" class="img-fluid w-100" id="video-feed">
+                    <div id="overlay" class="position-absolute top-0 start-0 w-100 h-100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Recognized People</h5>
+            </div>
+            <div class="card-body">
+                <div id="detection-list" class="list-group">
+                    <div class="text-center py-3 text-muted">
+                        <i class="fas fa-spinner fa-pulse fa-2x mb-3"></i>
+                        <p>Waiting for detections...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="notifications" class="position-fixed bottom-0 end-0 p-3" style="z-index: 5"></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Debug elements
+    let frameCounter = 0;
+    let faceDetectionCounter = 0;
+    let lastDetectionTime = Date.now();
+    
+    // Status elements
+    const cameraStatus = document.getElementById('camera-status');
+    const detectionStatus = document.getElementById('detection-status');
+    const attendanceStatus = document.getElementById('attendance-status');
+    const detectionList = document.getElementById('detection-list');
+    
+    // Track people we've already marked attendance for
+    const markedAttendance = new Set();
+    
+    // Listen for face detection events
+    const eventSource = new EventSource('/video_metadata');
+    
+    eventSource.onopen = function() {
+        console.log("Connection to server established");
+        cameraStatus.className = 'alert alert-success';
+        cameraStatus.innerHTML = '<i class="fas fa-check-circle"></i> Camera connected';
+    };
+    
+    eventSource.onmessage = function(event) {
+        frameCounter++;
+        const data = JSON.parse(event.data);
+        
+        // Update camera status if we're receiving frames
+        if (frameCounter % 30 === 0) { // Update status every ~3 seconds
+            cameraStatus.className = 'alert alert-success';
+            cameraStatus.innerHTML = '<i class="fas fa-check-circle"></i> Camera active';
+        }
+        
+        // Process each detected face
+        if (data.faces && data.faces.length > 0) {
+            faceDetectionCounter++;
+            lastDetectionTime = Date.now();
+            
+            // Update detection status
+            detectionStatus.className = 'alert alert-success';
+            detectionStatus.innerHTML = `<i class="fas fa-user-check"></i> Detected ${data.faces.length} face(s)`;
+            
+            // Clear old content
+            detectionList.innerHTML = '';
+            
+            // Display each face
+            data.faces.forEach(face => {
+                // Create list item for this face
+                const listItem = document.createElement('div');
+                listItem.className = 'list-group-item';
+                
+                // Determine confidence color
+                let confidenceClass = 'text-danger';
+                if (face.confidence >= 0.8) confidenceClass = 'text-success';
+                else if (face.confidence >= 0.6) confidenceClass = 'text-warning';
+                
+                listItem.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${face.name}</h6>
+                        <span class="${confidenceClass}">${Math.round(face.confidence * 100)}%</span>
+                    </div>
+                    ${face.person_id && face.person_id !== 'unknown' ?
+                        `<small class="text-muted">ID: ${face.person_id.substring(0,8)}...</small>` : 
+                        '<small class="text-danger">Unknown person</small>'}
+                `;
+                
+                detectionList.appendChild(listItem);
+                
+                // Only mark attendance for faces with good confidence that we haven't marked yet
+                if (face.person_id && 
+                    face.confidence > 0.6 && 
+                    face.person_id !== 'unknown' && 
+                    !markedAttendance.has(face.person_id)) {
+                    
+                    // Mark this person as having attendance recorded
+                    markedAttendance.add(face.person_id);
+                    attendanceStatus.className = 'alert alert-success';
+                    attendanceStatus.innerHTML = `<i class="fas fa-check-circle"></i> Marked: ${face.name}`;
+                    
+                    // Show notification
+                    const notification = document.createElement('div');
+                    notification.className = 'alert alert-success alert-dismissible fade show';
+                    notification.innerHTML = `
+                        <strong>Attendance Marked!</strong> ${face.name}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    
+                    // Add to notifications
+                    const notifs = document.getElementById('notifications');
+                    notifs.appendChild(notification);
+                    
+                    // Auto-remove after 5 seconds
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                        setTimeout(() => notification.remove(), 1000);
+                    }, 5000);
+                    
+                    // Call the attendance API manually to ensure it's marked
+                    fetch('/mark_attendance', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            person_id: face.person_id,
+                            confidence: face.confidence
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Attendance marked via API:', data);
+                    })
+                    .catch(error => {
+                        console.error('Error marking attendance:', error);
+                    });
+                }
+            });
+        } else {
+            // No faces detected
+            if (Date.now() - lastDetectionTime > 3000) {
+                detectionStatus.className = 'alert alert-warning';
+                detectionStatus.innerHTML = '<i class="fas fa-search"></i> No faces detected';
+                
+                // If no faces for a while, show placeholder
+                if (Date.now() - lastDetectionTime > 10000) {
+                    detectionList.innerHTML = `
+                        <div class="text-center py-3 text-muted">
+                            <i class="fas fa-user-slash fa-2x mb-3"></i>
+                            <p>No faces detected</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+    };
+    
+    // Handle disconnects
+    eventSource.onerror = function() {
+        console.log('EventSource connection error. Reconnecting...');
+        cameraStatus.className = 'alert alert-danger';
+        cameraStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Connection lost. Reconnecting...';
+        
+        // Close and reopen
+        eventSource.close();
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
+    };
+    
+    // Add a debug button
+    const debugBtn = document.createElement('button');
+    debugBtn.className = 'btn btn-sm btn-danger position-absolute top-0 end-0 m-2';
+    debugBtn.innerHTML = '<i class="fas fa-sync"></i> Force Reload';
+    debugBtn.addEventListener('click', () => {
+        window.location.reload();
+    });
+    document.querySelector('.video-container').appendChild(debugBtn);
+});
+</script>
+{% endblock %}

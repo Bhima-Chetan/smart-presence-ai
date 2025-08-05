@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Register Person - Smart Presence{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-user-plus"></i> Register New Person</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Person Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="person_id" class="form-label">Person ID (Unique)</label>
+                        <input type="text" class="form-control" id="person_id" name="person_id" required>
+                        <div class="form-text">e.g., Employee ID, Student ID, etc.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role</label>
+                        <select class="form-select" id="role" name="role">
+                            <option value="Employee">Employee</option>
+                            <option value="Student">Student</option>
+                            <option value="Faculty">Faculty</option>
+                            <option value="Visitor">Visitor</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="images" class="form-label">Face Images (at least 3 recommended)</label>
+                        <input type="file" class="form-control" id="images" name="images" accept="image/*" multiple required>
+                        <div class="form-text">Select multiple clear face images of the person for better recognition.</div>
+                    </div>
+
+                    <div id="imagePreview" class="row mb-3"></div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Register Person
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Tips for Good Face Recognition</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success"></i> 
+                        Upload at least 3-5 different face images
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success"></i> 
+                        Ensure good lighting in the photos
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success"></i> 
+                        Include different angles (front, slight profile)
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check-circle text-success"></i> 
+                        Face should be clearly visible without obstructions
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-times-circle text-danger"></i> 
+                        Avoid heavily filtered photos
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-times-circle text-danger"></i> 
+                        Avoid images with multiple people
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Camera Capture</h5>
+            </div>
+            <div class="card-body text-center">
+                <button id="startCapture" class="btn btn-secondary mb-3">
+                    <i class="fas fa-camera"></i> Start Camera
+                </button>
+                <div id="cameraContainer" style="display: none;">
+                    <video id="video" width="100%" autoplay></video>
+                    <button id="captureBtn" class="btn btn-primary mt-2">
+                        <i class="fas fa-camera"></i> Capture Image
+                    </button>
+                </div>
+                <canvas id="canvas" style="display: none;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Only update UI when faces change or every 500ms
+let lastUpdateTime = 0;
+let lastFacesCount = 0;
+const updateInterval = 500; // ms
+
+function updateUI(data) {
+    const now = Date.now();
+    
+    // Skip updates that are too frequent or redundant
+    if (now - lastUpdateTime < updateInterval && 
+        data.faces.length === lastFacesCount) {
+        return;
+    }
+    
+    // Update UI elements here
+    // ...
+    
+    lastUpdateTime = now;
+    lastFacesCount = data.faces.length;
+}
+
+// Use this in your event handlers
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputImages = document.getElementById('images');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    // Show image preview when files are selected
+    inputImages.addEventListener('change', function() {
+        imagePreview.innerHTML = '';
+        
+        if (this.files) {
+            for (let i = 0; i < this.files.length; i++) {
+                const file = this.files[i];
+                if (!file.type.match('image.*')) {
+                    continue;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const previewCol = document.createElement('div');
+                    previewCol.className = 'col-4 mb-2';
+                    
+                    const img = document.createElement('img');
+                    img.className = 'img-thumbnail';
+                    img.src = e.target.result;
+                    img.style.height = '100px';
+                    img.style.objectFit = 'cover';
+                    
+                    previewCol.appendChild(img);
+                    imagePreview.appendChild(previewCol);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        }
+    });
+    
+    // Camera capture functionality
+    const startCapture = document.getElementById('startCapture');
+    const cameraContainer = document.getElementById('cameraContainer');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+    let stream = null;
+    
+    startCapture.addEventListener('click', function() {
+        if (cameraContainer.style.display === 'none') {
+            // Start camera
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(mediaStream) {
+                    stream = mediaStream;
+                    video.srcObject = mediaStream;
+                    video.play();
+                    cameraContainer.style.display = 'block';
+                    startCapture.innerHTML = '<i class="fas fa-times"></i> Stop Camera';
+                })
+                .catch(function(err) {
+                    console.error("Error accessing camera: " + err);
+                    alert("Could not access camera. Please check permissions.");
+                });
+        } else {
+            // Stop camera
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            cameraContainer.style.display = 'none';
+            startCapture.innerHTML = '<i class="fas fa-camera"></i> Start Camera';
+        }
+    });
+    
+    captureBtn.addEventListener('click', function() {
+        // Set canvas dimensions to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw the current video frame on the canvas
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert canvas to blob and create a File
+        canvas.toBlob(function(blob) {
+            // Create a File object
+            const capturedImage = new File([blob], "capture_" + new Date().getTime() + ".jpg", { type: "image/jpeg" });
+            
+            // Create a new FileList
+            const dataTransfer = new DataTransfer();
+            
+            // Add existing selected files
+            if (inputImages.files) {
+                for (let i = 0; i < inputImages.files.length; i++) {
+                    dataTransfer.items.add(inputImages.files[i]);
+                }
+            }
+            
+            // Add the captured image
+            dataTransfer.items.add(capturedImage);
+            
+            // Update the file input
+            inputImages.files = dataTransfer.files;
+            
+            // Trigger change event to update preview
+            const event = new Event('change');
+            inputImages.dispatchEvent(event);
+        }, 'image/jpeg');
+    });
+});
+</script>
+{% endblock %}

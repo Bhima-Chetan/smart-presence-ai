@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Attendance - Smart Presence{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-images"></i> Batch Attendance</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('attendance') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-clipboard-list"></i> View Attendance
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-upload"></i> Upload Image for Attendance</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="imageUpload" class="form-label">Select an image with faces</label>
+                        <input type="file" class="form-control" id="imageUpload" name="image" accept=".jpg,.jpeg,.png" required>
+                        <div class="form-text">The system will recognize faces and mark attendance automatically</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="dateSelect" class="form-label">Date for Attendance (optional)</label>
+                        <input type="date" class="form-control" id="dateSelect" name="date" value="{{ today_date }}">
+                        <div class="form-text">If not specified, today's date will be used</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Detect Faces & Mark Attendance
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if processed_image %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-image"></i> Processed Image</h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="data:image/jpeg;base64,{{ processed_image }}" class="img-fluid" alt="Processed image with detected faces">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if results %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> Recognition Results</h5>
+                <span class="badge bg-primary">{{ results|length }} Faces</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Person ID</th>
+                                <th>Name</th>
+                                <th>Confidence</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    {% if result.person_id %}
+                                    <small class="text-muted">{{ result.person_id[:8] }}...</small>
+                                    {% else %}
+                                    <span class="text-danger">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ result.name }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if result.confidence >= 0.8 %}bg-success{% elif result.confidence >= 0.6 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ result.confidence * 100 }}%;" 
+                                             aria-valuenow="{{ result.confidence * 100 }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ "%.0f"|format(result.confidence * 100) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if result.status == 'Marked' %}
+                                    <span class="badge bg-success">{{ result.status }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{{ result.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<script>
+// Only update UI when faces change or every 500ms
+let lastUpdateTime = 0;
+let lastFacesCount = 0;
+const updateInterval = 500; // ms
+
+function updateUI(data) {
+    const now = Date.now();
+    
+    // Skip updates that are too frequent or redundant
+    if (now - lastUpdateTime < updateInterval && 
+        data.faces.length === lastFacesCount) {
+        return;
+    }
+    
+    // Update UI elements here
+    // ...
+    
+    lastUpdateTime = now;
+    lastFacesCount = data.faces.length;
+}
+
+// Use this in your event handlers
+</script>
+{% endblock %}

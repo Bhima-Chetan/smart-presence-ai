@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Reports - Smart Presence{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-chart-bar"></i> Attendance Reports</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('attendance') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-clipboard-list"></i> Today's Attendance
+            </a>
+            <a href="{{ url_for('export_attendance') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-file-export"></i> Export
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Report Filters -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-filter"></i> Report Filters</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" id="report-form">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="report-type" class="form-label">Report Type</label>
+                        <select class="form-select" id="report-type" name="type" onchange="updateFormFields()">
+                            <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Daily Summary</option>
+                            <option value="by_person" {% if report_type == 'by_person' %}selected{% endif %}>By Person</option>
+                            <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>Monthly Overview</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Person selector (visible when by_person is selected) -->
+                <div class="col-md-4 report-field date-fields" id="person-selector" {% if report_type != 'by_person' %}style="display: none;"{% endif %}>
+                    <div class="mb-3">
+                        <label for="person-id" class="form-label">Select Person</label>
+                        <select class="form-select" id="person-id" name="person_id">
+                            <option value="">-- Select a person --</option>
+                            {% if all_people %}
+                                {% for person in all_people %}
+                                <option value="{{ person.person_id }}" {% if request.args.get('person_id') == person.person_id %}selected{% endif %}>
+                                    {{ person.name }} {% if person.role %}({{ person.role }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            {% else %}
+                                <option disabled value="">No registered people found</option>
+                            {% endif %}
+                        </select>
+                        {% if not all_people %}
+                        <div class="mt-2 text-danger">
+                            <small><i class="fas fa-exclamation-circle"></i> No people registered in the system. Please register people first.</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Date range fields (visible for daily and by_person) -->
+                <div class="col-md-4 report-field date-fields" {% if report_type == 'monthly' %}style="display: none;"{% endif %}>
+                    <div class="mb-3">
+                        <label for="start-date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start-date" name="start_date" value="{{ start_date }}">
+                    </div>
+                </div>
+                
+                <div class="col-md-4 report-field date-fields" {% if report_type == 'monthly' %}style="display: none;"{% endif %}>
+                    <div class="mb-3">
+                        <label for="end-date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end-date" name="end_date" value="{{ end_date }}">
+                    </div>
+                </div>
+                
+                <!-- Month selector (visible when monthly is selected) -->
+                <div class="col-md-4 report-field month-fields" {% if report_type != 'monthly' %}style="display: none;"{% endif %}>
+                    <div class="mb-3">
+                        <label for="month" class="form-label">Month</label>
+                        <select class="form-select" id="month" name="month">
+                            <option value="1" {% if request.args.get('month') == '1' %}selected{% endif %}>January</option>
+                            <option value="2" {% if request.args.get('month') == '2' %}selected{% endif %}>February</option>
+                            <option value="3" {% if request.args.get('month') == '3' %}selected{% endif %}>March</option>
+                            <option value="4" {% if request.args.get('month') == '4' %}selected{% endif %}>April</option>
+                            <option value="5" {% if request.args.get('month') == '5' %}selected{% endif %}>May</option>
+                            <option value="6" {% if request.args.get('month') == '6' %}selected{% endif %}>June</option>
+                            <option value="7" {% if request.args.get('month') == '7' %}selected{% endif %}>July</option>
+                            <option value="8" {% if request.args.get('month') == '8' %}selected{% endif %}>August</option>
+                            <option value="9" {% if request.args.get('month') == '9' %}selected{% endif %}>September</option>
+                            <option value="10" {% if request.args.get('month') == '10' %}selected{% endif %}>October</option>
+                            <option value="11" {% if request.args.get('month') == '11' %}selected{% endif %}>November</option>
+                            <option value="12" {% if request.args.get('month') == '12' %}selected{% endif %}>December</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 report-field month-fields" {% if report_type != 'monthly' %}style="display: none;"{% endif %}>
+                    <div class="mb-3">
+                        <label for="year" class="form-label">Year</label>
+                        <select class="form-select" id="year" name="year">
+                            {% for y in range(current_year-2, current_year+1) %}
+                            <option value="{{ y }}" {% if request.args.get('year')|int == y %}selected{% elif not request.args.get('year') and y == current_year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2 col-md-4 mx-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Generate Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Report Results -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-table"></i> 
+            {% if report_type == 'daily' %}
+                Daily Attendance Summary
+            {% elif report_type == 'by_person' %}
+                Person Attendance Details
+            {% elif report_type == 'monthly' %}
+                Monthly Attendance Overview
+            {% endif %}
+        </h5>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportTableToCSV('attendance_report.csv')">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Daily Report -->
+        {% if report_type == 'daily' and report_data %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="report-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Total Attendees</th>
+                        <th>On Time</th>
+                        <th>Late</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in report_data %}
+                    <tr>
+                        <td>{{ day.date }}</td>
+                        <td>{{ day.count }}</td>
+                        <td>{{ day.on_time }}</td>
+                        <td>{{ day.late }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Person Report -->
+        {% elif report_type == 'by_person' and report_data and report_data.person %}
+        <div class="alert alert-info mb-4">
+            <strong><i class="fas fa-user"></i> {{ report_data.person.name }}</strong>
+            {% if report_data.person.role %}
+            <span class="badge bg-secondary ms-2">{{ report_data.person.role }}</span>
+            {% endif %}
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="report-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if report_data.attendance %}
+                        {% for record in report_data.attendance %}
+                        <tr>
+                            <td>{{ record.date }}</td>
+                            <td>{{ record.time }}</td>
+                            <td>{{ record.last_seen }}</td>
+                            <td>{{ record.duration }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">No attendance records found for this period</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Monthly Report -->
+        {% elif report_type == 'monthly' and monthly_data and monthly_data.people %}
+        <div class="mb-4 alert alert-info">
+            <strong>Month Overview:</strong> {{ monthly_data.days_count }} days with attendance recorded.
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm" id="report-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Days Present</th>
+                        <th>Total Hours</th>
+                        <th>Average/Day</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for person in monthly_data.people %}
+                    <tr>
+                        <td>{{ person.name }}</td>
+                        <td>{{ person.role }}</td>
+                        <td>{{ person.attendance_count }}</td>
+                        <td>{{ person.total_hours }}</td>
+                        <td>{{ (person.total_hours / person.attendance_count)|round(1) if person.attendance_count > 0 else 0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <!-- No data available -->
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No attendance records found. Try changing your report criteria.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Show/hide form fields based on report type
+function updateFormFields() {
+    const reportType = document.getElementById('report-type').value;
+    
+    // Handle date fields visibility
+    const dateFields = document.querySelectorAll('.date-fields');
+    dateFields.forEach(el => {
+        el.style.display = (reportType === 'monthly') ? 'none' : 'block';
+    });
+    
+    // Handle month fields visibility
+    const monthFields = document.querySelectorAll('.month-fields');
+    monthFields.forEach(el => {
+        el.style.display = (reportType === 'monthly') ? 'block' : 'none';
+    });
+    
+    // Handle person selector visibility
+    const personSelector = document.getElementById('person-selector');
+    if (personSelector) {
+        personSelector.style.display = (reportType === 'by_person') ? 'block' : 'none';
+    }
+}
+
+// Export table to CSV
+function exportTableToCSV(filename) {
+    const table = document.getElementById('report-table');
+    if (!table) return;
+    
+    let csv = [];
+    let rows = table.querySelectorAll('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        let row = [], cols = rows[i].querySelectorAll('td, th');
+        
+        for (let j = 0; j < cols.length; j++) {
+            // Replace any commas in the cell content to avoid CSV parsing issues
+            let text = cols[j].innerText.replace(/,/g, ' ');
+            row.push('"' + text + '"');
+        }
+        
+        csv.push(row.join(','));
+    }
+    
+    // Download CSV file
+    downloadCSV(csv.join('\n'), filename);
+}
+
+function downloadCSV(csv, filename) {
+    let csvFile = new Blob([csv], {type: "text/csv"});
+    let downloadLink = document.createElement("a");
+    
+    downloadLink.download = filename;
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = "none";
+    
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+}
+
+// Initialize form fields on load
+document.addEventListener('DOMContentLoaded', function() {
+    updateFormFields();
+    
+    // Add change handler for person selector
+    const personId = document.getElementById('person-id');
+    if (personId) {
+        personId.addEventListener('change', function() {
+            if (this.value && document.getElementById('report-type').value === 'by_person') {
+                document.getElementById('report-form').submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
