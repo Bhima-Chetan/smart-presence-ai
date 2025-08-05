@@ -866,6 +866,47 @@ def export_attendance():
         flash(f"Unsupported export format: {export_format}", "danger")
         return redirect(url_for('attendance'))
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Render monitoring"""
+    try:
+        # Basic health checks
+        health_status = {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "database": "unknown",
+            "face_processor": "unknown"
+        }
+        
+        # Test database connection
+        try:
+            conn = db.get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            conn.close()
+            health_status["database"] = "connected"
+        except Exception as e:
+            health_status["database"] = f"error: {str(e)}"
+            
+        # Test face processor
+        try:
+            if hasattr(processor, 'known_face_encodings'):
+                health_status["face_processor"] = f"loaded ({len(processor.known_face_encodings)} faces)"
+            else:
+                health_status["face_processor"] = "loaded (simple mode)"
+        except Exception as e:
+            health_status["face_processor"] = f"error: {str(e)}"
+            
+        return jsonify(health_status), 200
+        
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy", 
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
 @app.route('/debug/dashboard')
 def debug_dashboard():
     """Debug endpoint to check dashboard data"""
