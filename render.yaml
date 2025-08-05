@@ -1,0 +1,19 @@
+version: "1"
+services:
+  - type: web
+    name: smart-presence-ai
+    env: python
+    plan: free
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.11
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: DEBUG
+        value: false
+      - key: PYTHONUNBUFFERED
+        value: 1

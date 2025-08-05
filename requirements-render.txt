@@ -11,6 +11,11 @@ Pillow==10.0.0
 # Computer vision and face recognition
 opencv-python-headless==4.8.1.78
 
-# Face recognition libraries
+# Face recognition libraries - Render has better support for these
 dlib==19.24.2
 face-recognition==1.3.0
+
+# Build dependencies that might help
+cmake==3.27.2
+setuptools==68.0.0
+wheel==0.41.0
