@@ -133,10 +133,5 @@ class SimpleFaceProcessor:
         
         return image, detected_faces
 
-# Try to import the real processor, fall back to simple one if face_recognition is not available
-try:
-    from processor_full import FaceProcessor
-    print("Using full face recognition processor")
-except ImportError:
-    print("Face recognition library not available, using simplified processor")
-    FaceProcessor = SimpleFaceProcessor
+# This will be the main class used when face_recognition is not available
+FaceProcessor = SimpleFaceProcessor

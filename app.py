@@ -15,8 +15,15 @@ import pandas as pd
 import atexit
 import logging
 
-# Import your custom classes
-from processor import FaceProcessor
+# Import your custom classes - with fallback handling
+try:
+    from processor import FaceProcessor
+    FACE_RECOGNITION_ENABLED = True
+except ImportError as e:
+    print(f"Warning: Face recognition not available: {e}")
+    from processor_simple import SimpleFaceProcessor as FaceProcessor
+    FACE_RECOGNITION_ENABLED = False
+
 from database import Database
 from camera import Camera
 

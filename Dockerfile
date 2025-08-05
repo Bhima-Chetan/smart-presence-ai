@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     liblapack-dev \
     libjpeg-dev \
     libpng-dev \
+    libboost-all-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables
@@ -19,13 +20,10 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY requirements-simple.txt ./requirements.txt
 
-# Install Python dependencies with specific order to avoid conflicts
+# Install Python dependencies - start with basic packages only
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir cmake
-RUN pip install --no-cache-dir numpy==1.24.3
-RUN pip install --no-cache-dir dlib --no-build-isolation
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
