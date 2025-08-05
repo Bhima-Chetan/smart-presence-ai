@@ -3,8 +3,8 @@
 {% block title %}Dashboard - Smart Presence{% endblock %}
 
 {% block login_content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
+<div class="row justify-content-center mt-3">
+    <div class="col-12 col-md-8 col-lg-6">
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0"><i class="fas fa-sign-in-alt"></i> Login</h4>
@@ -34,15 +34,15 @@
 
 {% block content %}
 <!-- Dashboard Header -->
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+<div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3 h2-md"><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.reload();">
-                <i class="fas fa-sync-alt"></i> Refresh
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-secondary" onclick="window.location.reload();">
+                <i class="fas fa-sync-alt"></i> <span class="d-none d-sm-inline">Refresh</span>
             </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print();">
-                <i class="fas fa-print"></i> Print
+            <button type="button" class="btn btn-outline-secondary d-none d-md-inline-block" onclick="window.print();">
+                <i class="fas fa-print"></i> <span class="d-none d-lg-inline">Print</span>
             </button>
         </div>
     </div>
@@ -50,39 +50,43 @@
 
 <!-- Quick Stats -->
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-6 col-md-3 mb-3">
         <div class="card text-white bg-primary shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Today's Attendance</h5>
-                <p class="display-4">{{ dashboard.today_count }}</p>
-                <p class="mb-0">People present today</p>
+            <div class="card-body text-center p-3">
+                <h6 class="card-title">Today's Attendance</h6>
+                <p class="display-6 display-4-md mb-1">{{ dashboard.today_count }}</p>
+                <small class="d-none d-md-block">People present today</small>
+                <small class="d-md-none">Present</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3 mb-3">
         <div class="card text-white bg-success shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">On Time</h5>
-                <p class="display-4">{{ dashboard.on_time_count }}</p>
-                <p class="mb-0">Before 9:00 AM</p>
+            <div class="card-body text-center p-3">
+                <h6 class="card-title">On Time</h6>
+                <p class="display-6 display-4-md mb-1">{{ dashboard.on_time_count }}</p>
+                <small class="d-none d-md-block">Before 9:00 AM</small>
+                <small class="d-md-none">Early</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3 mb-3">
         <div class="card text-white bg-warning shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Late</h5>
-                <p class="display-4">{{ dashboard.late_count }}</p>
-                <p class="mb-0">After 9:00 AM</p>
+            <div class="card-body text-center p-3">
+                <h6 class="card-title">Late</h6>
+                <p class="display-6 display-4-md mb-1">{{ dashboard.late_count }}</p>
+                <small class="d-none d-md-block">After 9:00 AM</small>
+                <small class="d-md-none">Late</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3 mb-3">
         <div class="card text-white bg-info shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Average Hours</h5>
-                <p class="display-4">{{ dashboard.avg_hours }}</p>
-                <p class="mb-0">Hours per person</p>
+            <div class="card-body text-center p-3">
+                <h6 class="card-title">Avg Hours</h6>
+                <p class="display-6 display-4-md mb-1">{{ dashboard.avg_hours }}</p>
+                <small class="d-none d-md-block">Hours per person</small>
+                <small class="d-md-none">Hrs/person</small>
             </div>
         </div>
     </div>
@@ -90,10 +94,10 @@
 
 <div class="row mb-4">
     <!-- Weekly Attendance Chart -->
-    <div class="col-md-8">
+    <div class="col-12 col-lg-8 mb-4">
         <div class="card shadow-sm h-100">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Weekly Attendance Trend</h5>
+                <h6 class="mb-0"><i class="fas fa-chart-line"></i> Weekly Attendance Trend</h6>
             </div>
             <div class="card-body">
                 <canvas id="weeklyChart" height="200"></canvas>

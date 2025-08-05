@@ -20,6 +20,12 @@
             padding: 48px 0 0;
             box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
             background-color: #f8f9fa;
+            width: 240px;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .sidebar.show {
+            transform: translateX(0);
         }
         .sidebar-sticky {
             position: relative;
@@ -37,8 +43,9 @@
             color: #007bff;
         }
         .main-content {
-            margin-left: 240px;
+            margin-left: 0;
             padding: 20px;
+            min-height: calc(100vh - 60px);
         }
         .attendance-box {
             border-radius: 5px;
@@ -48,25 +55,131 @@
         }
         .video-container {
             width: 100%;
-            max-width: 640px;
+            max-width: 100%;
             margin: 0 auto;
             border-radius: 5px;
             overflow: hidden;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .video-container video,
+        .video-container img {
+            width: 100%;
+            height: auto;
         }
         .flash-messages {
             position: fixed;
             top: 70px;
             right: 20px;
             z-index: 1000;
+            max-width: calc(100vw - 40px);
         }
-        @media (max-width: 768px) {
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            display: none;
+        }
+        .sidebar-overlay.show {
+            display: block;
+        }
+        /* Mobile-first responsive design */
+        @media (min-width: 768px) {
             .sidebar {
-                position: static;
-                height: auto;
+                transform: translateX(0);
+                position: fixed;
             }
             .main-content {
-                margin-left: 0;
+                margin-left: 240px;
+            }
+            .sidebar-overlay {
+                display: none !important;
+            }
+            .navbar-toggler.sidebar-toggle {
+                display: none;
+            }
+            .display-4-md {
+                font-size: 2.5rem !important;
+            }
+            .h2-md {
+                font-size: 2rem !important;
+            }
+        }
+        @media (max-width: 767px) {
+            .main-content {
+                padding: 15px;
+            }
+            .flash-messages {
+                top: 60px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+            .card {
+                margin-bottom: 1rem;
+            }
+            .btn-group-vertical .btn {
+                margin-bottom: 0.5rem;
+            }
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            .video-container {
+                max-width: 100%;
+            }
+            .display-6 {
+                font-size: 1.75rem;
+            }
+            .card-title {
+                font-size: 0.9rem;
+            }
+        }
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 10px;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            .btn {
+                font-size: 0.875rem;
+                padding: 0.375rem 0.75rem;
+            }
+            .form-control {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            .h3 {
+                font-size: 1.5rem;
+            }
+            .display-6 {
+                font-size: 1.5rem;
+            }
+            .card-header h6 {
+                font-size: 0.875rem;
+            }
+            .btn-group-sm > .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+            .alert {
+                padding: 0.5rem;
+                font-size: 0.875rem;
+            }
+        }
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .btn {
+                min-height: 44px; /* iOS recommended touch target */
+            }
+            .nav-link {
+                padding: 1rem;
+            }
+            .form-control {
+                min-height: 44px;
+                padding: 0.75rem;
             }
         }
     </style>
@@ -75,6 +188,9 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
+            <button class="navbar-toggler sidebar-toggle me-2 d-md-none" type="button" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <i class="fas fa-id-card-alt"></i> Smart Presence
             </a>
@@ -105,49 +221,54 @@
     </nav>
 
     {% if session.user_id %}
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    
     <div class="container-fluid">
         <div class="row">
-            <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar" id="sidebar">
                 <div class="sidebar-sticky">
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == url_for('index') %}active{% endif %}" 
-                               href="{{ url_for('index') }}">
+                               href="{{ url_for('index') }}" onclick="closeSidebar()">
                                 <i class="fas fa-home"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == url_for('live') %}active{% endif %}" 
-                               href="{{ url_for('live') }}">
+                               href="{{ url_for('live') }}" onclick="closeSidebar()">
                                 <i class="fas fa-video"></i> Live Recognition
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == url_for('attendance') %}active{% endif %}" 
-                               href="{{ url_for('attendance') }}">
+                               href="{{ url_for('attendance') }}" onclick="closeSidebar()">
                                 <i class="fas fa-clipboard-list"></i> Attendance
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == '/batch_attendance' %}active{% endif %}" href="{{ url_for('batch_attendance') }}">
+                            <a class="nav-link {% if request.path == '/batch_attendance' %}active{% endif %}" 
+                               href="{{ url_for('batch_attendance') }}" onclick="closeSidebar()">
                                 <i class="fas fa-images"></i> Batch Attendance
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == url_for('debug_face_model') %}active{% endif %}" href="{{ url_for('debug_face_model') }}">
+                            <a class="nav-link {% if request.path == url_for('debug_face_model') %}active{% endif %}" 
+                               href="{{ url_for('debug_face_model') }}" onclick="closeSidebar()">
                                 <i class="fas fa-microchip"></i> Debug Model
                             </a>
                         </li>
                         {% if session.is_admin %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == url_for('register') %}active{% endif %}" 
-                               href="{{ url_for('register') }}">
+                               href="{{ url_for('register') }}" onclick="closeSidebar()">
                                 <i class="fas fa-user-plus"></i> Register Person
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == url_for('reports') %}active{% endif %}" 
-                               href="{{ url_for('reports') }}">
+                               href="{{ url_for('reports') }}" onclick="closeSidebar()">
                                 <i class="fas fa-chart-bar"></i> Reports
                             </a>
                         </li>
@@ -218,6 +339,43 @@
             lastUpdateTime = now;
             lastFacesCount = data.faces.length;
         }
+
+        // Mobile sidebar functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            if (sidebar && overlay) {
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            if (window.innerWidth < 768) { // Only close on mobile
+                if (sidebar && overlay) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                }
+            }
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const toggleBtn = document.querySelector('.sidebar-toggle');
+            
+            if (window.innerWidth < 768 && 
+                sidebar && overlay &&
+                !sidebar.contains(event.target) && 
+                !toggleBtn.contains(event.target)) {
+                closeSidebar();
+            }
+        });
 
         // Use this in your event handlers
     </script>

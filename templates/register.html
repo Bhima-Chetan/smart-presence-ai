@@ -3,15 +3,15 @@
 {% block title %}Register Person - Smart Presence{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-user-plus"></i> Register New Person</h1>
+<div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3 h2-md"><i class="fas fa-user-plus"></i> Register New Person</h1>
 </div>
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-12 col-lg-6 mb-4">
         <div class="card shadow-sm">
             <div class="card-header">
-                <h5 class="mb-0">Person Information</h5>
+                <h6 class="mb-0">Person Information</h6>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data">
@@ -38,9 +38,9 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="images" class="form-label">Face Images (at least 3 recommended)</label>
+                        <label for="images" class="form-label">Face Images (min. 3 recommended)</label>
                         <input type="file" class="form-control" id="images" name="images" accept="image/*" multiple required>
-                        <div class="form-text">Select multiple clear face images of the person for better recognition.</div>
+                        <div class="form-text">Select multiple clear face images for better recognition.</div>
                     </div>
 
                     <div id="imagePreview" class="row mb-3"></div>

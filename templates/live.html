@@ -3,15 +3,15 @@
 {% block title %}Live Recognition - Smart Presence{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-camera"></i> Live Recognition</h1>
+<div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h3 h2-md"><i class="fas fa-camera"></i> Live Recognition</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="{{ url_for('attendance') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-clipboard-list"></i> Attendance
+        <div class="btn-group btn-group-sm">
+            <a href="{{ url_for('attendance') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-clipboard-list"></i> <span class="d-none d-sm-inline">Attendance</span>
             </a>
-            <a href="{{ url_for('debug_face_model') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-bug"></i> Debug Model
+            <a href="{{ url_for('debug_face_model') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-bug"></i> <span class="d-none d-sm-inline">Debug</span>
             </a>
         </div>
     </div>
@@ -19,32 +19,32 @@
 
 <!-- Status indicators row -->
 <div class="row mb-3">
-    <div class="col-md-4">
-        <div class="alert alert-info" id="camera-status">
-            <i class="fas fa-circle-notch fa-spin"></i> Connecting to camera...
+    <div class="col-12 col-md-4 mb-2">
+        <div class="alert alert-info mb-0" id="camera-status">
+            <i class="fas fa-circle-notch fa-spin"></i> <span class="d-none d-sm-inline">Connecting to camera...</span><span class="d-sm-none">Connecting...</span>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="alert alert-secondary" id="detection-status">
-            <i class="fas fa-search"></i> Waiting for faces...
+    <div class="col-12 col-md-4 mb-2">
+        <div class="alert alert-secondary mb-0" id="detection-status">
+            <i class="fas fa-search"></i> <span class="d-none d-sm-inline">Waiting for faces...</span><span class="d-sm-none">Waiting...</span>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="alert alert-secondary" id="attendance-status">
-            <i class="fas fa-clipboard-check"></i> Attendance: Ready
+    <div class="col-12 col-md-4 mb-2">
+        <div class="alert alert-secondary mb-0" id="attendance-status">
+            <i class="fas fa-clipboard-check"></i> <span class="d-none d-sm-inline">Attendance: Ready</span><span class="d-sm-none">Ready</span>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-8">
-        <div class="card shadow-sm mb-4">
+    <div class="col-12 col-lg-8 mb-4">
+        <div class="card shadow-sm">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-video"></i> Camera Feed</h5>
+                <h6 class="mb-0"><i class="fas fa-video"></i> Camera Feed</h6>
             </div>
             <div class="card-body p-0">
                 <div class="video-container position-relative">
-                    <img src="{{ url_for('video_feed') }}" class="img-fluid w-100" id="video-feed">
+                    <img src="{{ url_for('video_feed') }}" class="img-fluid w-100" id="video-feed" style="max-height: 70vh; object-fit: contain;">
                     <div id="overlay" class="position-absolute top-0 start-0 w-100 h-100"></div>
                 </div>
             </div>
