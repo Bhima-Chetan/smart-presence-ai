@@ -26,10 +26,16 @@ except ImportError:
         FACE_RECOGNITION_ENABLED = True
         print("Using standard face recognition processor")
     except ImportError as e:
-        print(f"Warning: Face recognition not available: {e}")
-        from processor_simple import SimpleFaceProcessor as FaceProcessor
-        FACE_RECOGNITION_ENABLED = False
-        print("Using simplified processor")
+        print(f"Warning: Standard face recognition not available: {e}")
+        try:
+            from processor_simple import SimpleFaceProcessor as FaceProcessor
+            FACE_RECOGNITION_ENABLED = False
+            print("Using simplified processor")
+        except ImportError as e2:
+            print(f"Warning: Simple processor not available: {e2}")
+            print("Using ultra-simple processor (no face recognition)")
+            from processor_ultra_simple import UltraSimpleProcessor as FaceProcessor
+            FACE_RECOGNITION_ENABLED = False
 
 from database import Database
 from camera import Camera
