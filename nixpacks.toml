@@ -1,0 +1,12 @@
+[phases.build]
+cmds = [
+    "pip install --upgrade pip",
+    "pip install -r requirements.txt"
+]
+
+[phases.start]
+cmd = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120"
+
+[variables]
+PYTHONUNBUFFERED = "1"
+PORT = "8080"
