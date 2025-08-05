@@ -2,19 +2,11 @@ import os
 import cv2
 import numpy as np
 import pickle
+import face_recognition
 from datetime import datetime
 import time
 import json
 import threading
-
-# Try to import face_recognition, fall back to simple detection if not available
-try:
-    import face_recognition
-    FACE_RECOGNITION_AVAILABLE = True
-    print("Face recognition library loaded successfully")
-except ImportError:
-    FACE_RECOGNITION_AVAILABLE = False
-    print("Warning: face_recognition library not available, using simplified detection")
 
 class FaceProcessor:
     def __init__(self, training_data_path='training_data', face_model_path='face_model.pkl'):

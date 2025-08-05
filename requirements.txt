@@ -5,10 +5,9 @@ numpy==1.24.3
 pandas==2.0.3
 Pillow==10.0.0
 
-# Use headless OpenCV for serverless deployment
+# OpenCV without GUI dependencies for cloud deployment
 opencv-python-headless==4.8.1.78
 
-# Face recognition - try without dlib dependency issues
-# Install dlib first, then face-recognition
+# Face recognition libraries - install in specific order
 dlib==19.24.2
 face-recognition==1.3.0
