@@ -1,0 +1,16 @@
+# Absolutely minimal requirements for guaranteed Render deployment
+# No OpenCV to avoid NumPy compatibility issues
+
+# Core web framework only
+Flask==2.3.3
+gunicorn==21.2.0
+Werkzeug==2.3.7
+
+# Basic data handling
+pandas==2.0.3
+
+# Image handling (basic only)
+Pillow==10.0.0
+
+# Utilities
+python-dateutil==2.8.2

@@ -9,11 +9,56 @@ import traceback
 import json
 import base64
 import shutil
-import cv2
-import numpy as np
-import pandas as pd
 import atexit
 import logging
+
+# Conditional imports for problematic packages
+try:
+    import cv2
+    CV2_AVAILABLE = True
+    print("OpenCV imported successfully")
+except ImportError as e:
+    print(f"Warning: OpenCV not available: {e}")
+    CV2_AVAILABLE = False
+    # Create a mock cv2 module for basic functionality
+    class MockCV2:
+        def imread(self, *args, **kwargs):
+            return None
+        def imwrite(self, *args, **kwargs):
+            return False
+        def putText(self, *args, **kwargs):
+            pass
+        def imencode(self, *args, **kwargs):
+            return False, b''
+        def imdecode(self, *args, **kwargs):
+            return None
+        FONT_HERSHEY_SIMPLEX = 0
+        IMREAD_COLOR = 1
+    cv2 = MockCV2()
+
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+    print("NumPy imported successfully")
+except ImportError as e:
+    print(f"Warning: NumPy not available: {e}")
+    NUMPY_AVAILABLE = False
+    # Create a basic numpy mock
+    class MockNumPy:
+        def frombuffer(self, *args, **kwargs):
+            return []
+        def ones(self, *args, **kwargs):
+            return []
+        uint8 = int
+    np = MockNumPy()
+
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+    print("Pandas imported successfully")
+except ImportError as e:
+    print(f"Warning: Pandas not available: {e}")
+    PANDAS_AVAILABLE = False
 
 # Import your custom classes - prefer full face recognition
 try:
