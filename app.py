@@ -33,7 +33,7 @@ logger = logging.getLogger("smart_presence")
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = 'smart_presence_ai_secret_key'
+app.secret_key = os.environ.get('SECRET_KEY', 'smart_presence_ai_secret_key')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 
