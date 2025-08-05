@@ -1,63 +1,46 @@
 #!/bin/bash
 
-# Build script for Render deployment
-echo "Starting build process for Smart Presence AI..."
+# Simplified build script for Render deployment
+echo "Starting simplified build process for Smart Presence AI..."
 
-# Set environment variables for better compilation
-export MAKEFLAGS="-j1"
-export CMAKE_BUILD_PARALLEL_LEVEL=1
+# Update package lists
+apt-get update
 
-# Update system packages and install dependencies
+# Install system CMake (not Python CMake)
 echo "Installing system dependencies..."
-apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
-    libopenblas-dev \
-    liblapack-dev \
-    libx11-dev \
-    libgtk-3-dev \
-    python3-dev
+apt-get install -y cmake build-essential
 
-# Install Python dependencies
+# Install Python dependencies with explicit pip upgrade
 echo "Installing Python packages..."
-pip install --upgrade pip setuptools wheel
+python -m pip install --upgrade pip setuptools wheel
 
-# Install CMake and build tools first
-pip install cmake
+# Install core packages first (these should always work)
+echo "Installing core Flask dependencies..."
+pip install flask==2.3.3
+pip install gunicorn==21.2.0
+pip install werkzeug==2.3.7
 
-# Install numpy with specific version (critical for compatibility)
-echo "Installing NumPy..."
+# Install data processing packages
+echo "Installing data processing packages..."
+pip install pandas==2.0.3
+pip install pillow==10.0.0
+
+# Install NumPy with specific version (critical)
+echo "Installing NumPy 1.24.3..."
 pip install numpy==1.24.3
 
-# Install computer vision packages
+# Install OpenCV (should work on most systems)
 echo "Installing OpenCV..."
 pip install opencv-python-headless==4.8.1.78
 
-# Try to install dlib with timeout and fallback
-echo "Attempting to install dlib..."
-timeout 600 pip install dlib==19.24.2 || {
-    echo "dlib installation failed or timed out, trying alternative..."
-    pip install dlib || echo "dlib installation failed completely, will use fallback processor"
-}
+# Skip face recognition libraries entirely for now
+echo "Skipping face recognition libraries due to build complexity..."
+echo "Application will use ultra-simple processor mode"
 
-# Try to install face recognition with fallback
-echo "Attempting to install face-recognition..."
-pip install face-recognition==1.3.0 || {
-    echo "face-recognition installation failed, will use simplified processor"
-}
-
-# Install core Flask dependencies (these should always work)
-echo "Installing core dependencies..."
-pip install flask==2.3.3
-pip install gunicorn==21.2.0
-pip install pandas==2.0.3
-pip install Pillow==10.0.0
-pip install werkzeug==2.3.7
-
-# Try to install remaining requirements, continue on errors
+# Install any remaining simple packages
 echo "Installing remaining requirements..."
-pip install -r requirements.txt || echo "Some optional packages failed, continuing with available packages..."
+pip install python-dateutil==2.8.2 || echo "Some packages failed, continuing..."
 
-echo "Build process completed successfully!"
-echo "Installed packages:"
-pip list | grep -E "(flask|gunicorn|numpy|opencv|dlib|face-recognition)"
+echo "Build completed! Application will run in simple mode without face recognition."
+echo "Final package list:"
+pip list
