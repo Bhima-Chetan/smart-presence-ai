@@ -130,10 +130,7 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         Server Load
                         <div class="progress" style="width: 60%;">
-                            <div class="progress-bar" role="progressbar" style="width: {{ server_load|default(25) }}%;" 
-                                 aria-valuenow="{{ server_load|default(25) }}" aria-valuemin="0" aria-valuemax="100">
-                                 {{ server_load|default(25) }}%
-                            </div>
+                            <div class="progress-bar" role="progressbar" style="width: {{ server_load|default(25) }}%" aria-valuenow="{{ server_load|default(25) }}" aria-valuemin="0" aria-valuemax="100">{{ server_load|default(25) }}%</div>
                         </div>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -214,18 +211,25 @@
 
 <!-- Chart JS Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-<script>
+<script type="text/javascript">
 document.addEventListener('DOMContentLoaded', function() {
-    // Weekly attendance chart
-    const weeklyData = {{ dashboard.weekly_trend|tojson|safe }};
+    // Weekly attendance chart - template data injected by Flask
+    var weeklyData = {{ dashboard.weekly_trend|tojson|safe }};
     
     if (weeklyData && weeklyData.length > 0) {
-        const ctx = document.getElementById('weeklyChart').getContext('2d');
+        var ctx = document.getElementById('weeklyChart').getContext('2d');
         
-        // Make sure the data exists and has the right structure
-        const labels = weeklyData.map(day => day.day || '?');
-        const onTimeData = weeklyData.map(day => day.on_time || 0);
-        const lateData = weeklyData.map(day => day.late || 0);
+        // Process the data
+        var labels = [];
+        var onTimeData = [];
+        var lateData = [];
+        
+        for (var i = 0; i < weeklyData.length; i++) {
+            var day = weeklyData[i];
+            labels.push(day.day || '?');
+            onTimeData.push(day.on_time || 0);
+            lateData.push(day.late || 0);
+        }
         
         new Chart(ctx, {
             type: 'bar',
@@ -253,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 maintainAspectRatio: false,
                 scales: {
                     x: {
-                        stacked: true,
+                        stacked: true
                     },
                     y: {
                         stacked: true,
@@ -267,33 +271,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     } else {
         // Display a message when no data is available
-        const chartContainer = document.getElementById('weeklyChart').parentNode;
+        var chartContainer = document.getElementById('weeklyChart').parentNode;
         chartContainer.innerHTML = '<div class="text-center py-5 text-muted">No attendance data available for this week</div>';
     }
 });
-</script>
-<script>
-// Only update UI when faces change or every 500ms
-let lastUpdateTime = 0;
-let lastFacesCount = 0;
-const updateInterval = 500; // ms
+
+// UI update function for future use
+var lastUpdateTime = 0;
+var lastFacesCount = 0;
+var updateInterval = 500; // ms
 
 function updateUI(data) {
-    const now = Date.now();
+    var now = Date.now();
     
     // Skip updates that are too frequent or redundant
     if (now - lastUpdateTime < updateInterval && 
-        data.faces.length === lastFacesCount) {
+        data.faces && data.faces.length === lastFacesCount) {
         return;
     }
     
     // Update UI elements here
-    // ...
+    // Future implementation
     
     lastUpdateTime = now;
-    lastFacesCount = data.faces.length;
+    lastFacesCount = data.faces ? data.faces.length : 0;
 }
-
-// Use this in your event handlers
 </script>
 {% endblock %}
